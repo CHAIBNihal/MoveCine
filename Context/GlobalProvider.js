@@ -18,6 +18,7 @@ const GlobalProvider = ({ children }) => {
   const [id, setId] = useState("")
   const [token, setToken] = useState("")
   const [emailProvider, setEmailProvider] = useState("")
+  
   if (!children) {
     throw new Error("GlobalProvider must have children components!");
   }

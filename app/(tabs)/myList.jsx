@@ -8,7 +8,10 @@ const MyList = () => {
   const { token } = useGlobalProvider()
   return (
     <View className="flex-1 bg-black ">
-      <Headers />
+      <View className="flex-row justify-between py-1 px-2 ">
+        <Text className="text-primary font-bold  text-3xl ml-2 mt-5 ">MoveCiné</Text>
+
+      </View>
       {
         !token ? (<Login />) : (<ListScreen />)
       }

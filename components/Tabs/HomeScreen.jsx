@@ -14,14 +14,11 @@ const HomeScreen = () => {
       <Headers />
 
       {/**Filter */}
-      <View className=" flex-row  justify-center ">
-        <TouchableOpacity className="py-3 px-4 ml-3 rounded-3xl flex-row"
-          style={{ backgroundColor: "rgba(128,128,128,0.4)" }}>
-          <Text className="text-lg text-white font-semibold ">All Films </Text>
-        </TouchableOpacity>
+      <View className=" w-1/3 justify-start ">
+      
         <TouchableOpacity className="py-3 px-4 ml-3 rounded-3xl flex-row" onPress={() => setisDown(!isDown)}
           style={{ backgroundColor: "rgba(128,128,128,0.4)" }}>
-          <Text className="text-lg text-white font-semibold ">Categories </Text>
+          <Text className="text-md ml-4 text-white font-semibold ">Categories </Text>
         </TouchableOpacity>
       </View>
       <ModalComponent down={isDown} setDown={setisDown} />

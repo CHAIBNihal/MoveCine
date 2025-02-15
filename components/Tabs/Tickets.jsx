@@ -1,20 +1,24 @@
-import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView, Image } from "react-native";
 import React, { useEffect, useState } from "react";
+import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView, Image, Platform } from "react-native";
 import { useGlobalProvider } from "../../Context/GlobalProvider";
-import Foundation from '@expo/vector-icons/Foundation';
+import { Foundation, Ionicons, FontAwesome } from '@expo/vector-icons';
+import { ServeurPoint, tmdb_Token } from "../../constants";
+import QRCode from 'react-native-qrcode-svg';
 
-const Ticket = () => {
-  const { id, token } = useGlobalProvider();
-  const [AllTickets, setAllTickets] = useState([]);
+
+const Tickets = () => {
+  const { id, token, emailProvider } = useGlobalProvider();
+  const [allTickets, setAllTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [movies, setMovies] = useState([]);
   const [error, setError] = useState(null);
-  const [FilmBooked, setFilmBooked] = useState([]);
+  const [filmBooked, setFilmBooked] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const endPoints = Platform.OS === 'ios' ? 'http://localhost:4242' : ServeurPoint;
 
-  const fetchAllTic = async () => {
-    setLoading(true);
+  const fetchAllTickets = async () => {
     try {
-      const response = await fetch(`http://192.168.11.121:4242/allTickets/${id}`, {
+      const response = await fetch(`${endPoints}/allTickets/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -22,14 +26,10 @@ const Ticket = () => {
         },
       });
 
+      if (!response.ok) throw new Error("Erreur lors de la récupération des tickets.");
+
       const data = await response.json();
-
-      if (!data.success || !data.data || data.data.length === 0) {
-        throw new Error(data.message || "Aucun ticket trouvé");
-      }
-
-      const tickets = data.data[0].films ? data.data[0].films.map(String) : [];
-      setAllTickets(tickets);
+      setAllTickets(data.data.length > 0 ? data.data.map((t) => t.filmId) : []);
       setError(null);
     } catch (error) {
       console.error("Erreur lors du chargement des tickets:", error);
@@ -39,8 +39,9 @@ const Ticket = () => {
     }
   };
 
+
+
   const fetchMovies = async () => {
-    setLoading(true);
     try {
       const response = await fetch(
         "https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=2",
@@ -48,7 +49,7 @@ const Ticket = () => {
           method: "GET",
           headers: {
             accept: "application/json",
-            Authorization: "Bearer TON_TOKEN_TMDB",
+            Authorization: `Bearer ${tmdb_Token}`,
           },
         }
       );
@@ -67,17 +68,16 @@ const Ticket = () => {
   };
 
   const getTicketList = () => {
-    if (movies.length > 0 && AllTickets.length > 0) {
-      const films = movies.filter((movie) => AllTickets.includes(movie.id.toString()));
+    if (movies.length > 0 && allTickets.length > 0) {
+      const films = movies.filter((movie) => allTickets.includes(movie.id.toString()));
       setFilmBooked(films);
-    } else {
-      console.log("Aucun film réservé pour le moment");
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      await fetchAllTic();
+      setLoading(true);
+      await fetchAllTickets();
       await fetchMovies();
     };
     fetchData();
@@ -85,51 +85,107 @@ const Ticket = () => {
 
   useEffect(() => {
     getTicketList();
-  }, [movies, AllTickets]);
+  }, [movies, allTickets]);
 
-  if (loading) return <ActivityIndicator size="large" color="#E0144C" className="flex-1" />;
-  if (error) return <Text className="text-red-500 text-center">{error}</Text>;
+  if (loading) return <ActivityIndicator size="large" color="#E0144C" style={{ flex: 1 }} />;
+  if (error) return <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>;
 
   return (
-    <View className="flex-1 justify-start items-start  py-2" style={{ backgroundColor: "rgba(128,128,128,0.5)" }}>
-      <View className="flex-row justify-around  items-center ">
+    <View style={{ flex: 1, padding: 10 }}>
+      {selectedTicket ? (
+
         <View>
-          <Text className="text-white text-lg font-bold">Tickets</Text>
-        </View>
-        <TouchableOpacity
-          className="px-4 py-2  rounded-lg my-2"
-          onPress={() => {
-            fetchAllTic();
-            fetchMovies();
-          }}
-        >
-          <Foundation name="refresh" size={22} color="black" />
-        </TouchableOpacity>
-      </View>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+            <TouchableOpacity onPress={() => setSelectedTicket(null)}>
+              <Ionicons name="arrow-back" size={24} color="gray" />
+            </TouchableOpacity>
+            <Text style={{ color: "white", fontSize: 18, marginLeft: 10 }}>Ticket Details</Text>
+          </View>
 
-      {FilmBooked.length > 0 ? (
-        <View className="  w-screen">
-          {FilmBooked.map((film, index) => (
-            <View key={index} className=" flex-row  px-4 py-4  w-full mx-3 rounded-xl mb-4 " style={{ backgroundColor: "rgba(128,128,128,0.2)" }}>
-              <Image
-                source={{ uri: `https://image.tmdb.org/t/p/w500${film.poster_path}` }}
-                className="w-32 h-48 rounded-md"
-              />
-              <View className="px-2 ">
-              <Text className="text-white text-center">{film.title}</Text>
-              <Text className="text-white text-center">{film.id}</Text>
-              </View>
-            
+          <View style={{ alignItems: "center", marginBottom: 20 }}>
+            <Image
+              source={{ uri: `https://image.tmdb.org/t/p/w500${selectedTicket.poster_path}` }}
+              style={{ width: 200, height: 300, borderRadius: 10 }}
+            />
+            <Text style={{ color: "white", fontSize: 20, fontWeight: "bold", marginTop: 10 }}>
+              {selectedTicket.title}
+            </Text>
+          </View>
+
+
+          <View style={{ padding: 10, backgroundColor: "rgba(128,128,128,0.2)", borderRadius: 10, marginBottom: 20 }}>
+            <Text style={{ color: "#bbb", fontSize: 16 }}>Email: {emailProvider}</Text>
+            <View style={{ flexDirection: "row", marginTop: 10 }}>
+              <Text style={{ color: "#bbb", fontSize: 16 }}>Ticket price </Text>
+              <Text style={{ color: "white", fontWeight: "bold", fontSize: 18 }}>5.00</Text>
+              <FontAwesome name="dollar" size={19} color="white" style={{ marginLeft: 5, marginTop: 3 }} />
             </View>
-          ))}
+          </View>
+          <View style={{ alignItems: "center", marginBottom: 20 }}>
+            <Text style={{ color: "white", fontWeight: 700, marginBottom: 10 }}>Ticket code for scann </Text>
+            <View style={{ width: "auto", backgroundColor: "rgba(128,128,128,0.5)", alignItems: 'center', padding: 19, marginBottom: 7 }}>
+              <QRCode
+                value={JSON.stringify({
+                  email: emailProvider,
+                  film: selectedTicket.title,
+                  prix: 5,
+                  etat: "Validé"
+                })}
+                size={150}
+                color="black"
+                backgroundColor="white"
+              />
+            </View>
+
+
+          </View>
+
+
         </View>
-
-
       ) : (
-        <Text className="text-white">Aucun film réservé</Text>
+
+        <ScrollView>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 10 }}>
+            <TouchableOpacity onPress={() => setSelectedTicket(null)} style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons name="arrow-back" size={24} color="gray" />
+              <Text style={{ color: "white", fontSize: 18, fontWeight: "bold", marginLeft: 10 }}>Mes Tickets</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => { fetchAllTickets(); fetchMovies(); }}>
+              <Foundation name="refresh" size={22} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          {filmBooked.length > 0 ? (
+            filmBooked.map((film, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => setSelectedTicket(film)}
+                style={{
+                  flexDirection: "row",
+                  padding: 10,
+                  borderRadius: 10,
+                  marginBottom: 10,
+                  backgroundColor: "rgba(128,128,128,0.2)"
+                }}
+              >
+                <Image
+                  source={{ uri: `https://image.tmdb.org/t/p/w500${film.poster_path}` }}
+                  style={{ width: 100, height: 150, borderRadius: 10 }}
+                />
+                <View style={{ marginLeft: 10, flex: 1 }}>
+                  <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>{film.title}</Text>
+                  <Text style={{ color: "#bbb" }}>Email: {emailProvider}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={{ color: "white", textAlign: "center", marginTop: 20 }}>Aucun film réservé</Text>
+          )}
+        </ScrollView>
       )}
     </View>
   );
 };
 
-export default Ticket;
+export default Tickets;

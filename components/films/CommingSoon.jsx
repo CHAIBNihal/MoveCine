@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useGlobalProvider } from "../../Context/GlobalProvider"
 import {AddToFavoriteList} from "../../Functions/index"
+import { tmdb_Token } from "../../constants";
 const CommingSoon = () => {
   const { id, token } = useGlobalProvider();
 
@@ -12,19 +13,21 @@ const CommingSoon = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null); // Nouveau état pour suivre le film sélectionné
+
   const numColumns = 2;
 
 
 
   useEffect(() => {
     const fetchMovies = async () => {
+      
       const url = "https://api.themoviedb.org/3/movie/upcoming?language=en-US&page=1";
       const options = {
         method: "GET",
         headers: {
           accept: "application/json",
           Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1ZDJhZTBiNzE4MDQ3Yzc3MWYxMmQyNmFhOTA0ZDNjMCIsIm5iZiI6MTczODYxMTIxOS4zNjYwMDAyLCJzdWIiOiI2N2ExMWExM2VkODI5ZWJjNTZlMmI0NGYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.3K88CPu4X0HUOYc3J5Ns4GfL5dijSKMsDcT9Hr0ayvA",
+             `Bearer ${tmdb_Token}`,
         },
       };
 

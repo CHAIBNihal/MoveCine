@@ -7,7 +7,8 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useGlobalProvider } from "../../Context/GlobalProvider"
 import { AddToFavoriteList, createTicket } from "../../Functions/index"
 import Fontisto from '@expo/vector-icons/Fontisto';
-
+import { tmdb_Token } from "../../constants";
+import PaymentFilms from "../Tabs/Modal/PaymentFilms";
 const NowShowing = () => {
   // Provider values
   const { id, token,emailProvider } = useGlobalProvider();
@@ -16,11 +17,11 @@ const NowShowing = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedMovie, setSelectedMovie] = useState(null); // Ajouté pour suivre le film sélectionné
+  const [selectedMovie, setSelectedMovie] = useState(null); 
+  const [open, setOpen] = useState(false)
+ 
   const numColumns = 2;
-
-
-
+ 
   useEffect(() => {
     const fetchMovies = async () => {
       const url = "https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=2";
@@ -29,7 +30,7 @@ const NowShowing = () => {
         headers: {
           accept: "application/json",
           Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1ZDJhZTBiNzE4MDQ3Yzc3MWYxMmQyNmFhOTA0ZDNjMCIsIm5iZiI6MTczODYxMTIxOS4zNjYwMDAyLCJzdWIiOiI2N2ExMWExM2VkODI5ZWJjNTZlMmI0NGYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.3K88CPu4X0HUOYc3J5Ns4GfL5dijSKMsDcT9Hr0ayvA",
+           `Bearer ${tmdb_Token}`
         },
       };
 
@@ -44,16 +45,13 @@ const NowShowing = () => {
         setLoading(false);
       }
     };
-
-  
- 
     fetchMovies();
   }, []);
 
   
   if (loading) return <ActivityIndicator size="large" color="#E0144C" />;
   if (error) return <Text style={styles.error}>Erreur : {error}</Text>;
-
+console.log(open)
 
   return selectedMovie ? (
     // Selected film
@@ -71,7 +69,8 @@ const NowShowing = () => {
         <Text style={styles.releaseDate}>Released at  : {selectedMovie.release_date}</Text>
         <Text style={styles.movieOverview}>{selectedMovie.overview}</Text>
         <View style={{ flexDirection: 'row', marginTop: 15, justifyContent: "space-between", width: "100%", paddingHorizontal: 38 }}>
-          <TouchableOpacity style={styles.iconButton} onPress={()=>createTicket(id, selectedMovie.id, emailProvider, token)}>
+          <TouchableOpacity style={styles.iconButton} onPress={()=>setOpen(!open)}>
+
             <Fontisto name="ticket" size={24} color="black" />
             <Text className="text-center ml-2  ">book ticket</Text>
           </TouchableOpacity>
@@ -87,6 +86,9 @@ const NowShowing = () => {
         >
           <Text style={styles.backButtonText}>Go Back </Text>
         </TouchableOpacity>
+        {
+          open ? <PaymentFilms filmId={selectedMovie.id} nameFilm={selectedMovie.title}/> : null
+        }
       </View>
 
     </ScrollView>

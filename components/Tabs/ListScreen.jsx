@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, FlatList, Image } from
 import React, { useState, useEffect } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useGlobalProvider } from '../../Context/GlobalProvider';
-
+import { tmdb_Token, ServeurPoint } from '../../constants';
 const ListScreen = () => {
   const { id, token } = useGlobalProvider();
   const [favorite, setFavorite] = useState([]);
@@ -11,6 +11,7 @@ const ListScreen = () => {
   const [filteredMovies, setFilteredMovies] = useState([]); // Liste filtrée des films favoris
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+ 
 
   // Fonction pour récupérer les films favoris de l'utilisateur
   const fetchUserFavorites = async () => {
@@ -20,11 +21,11 @@ const ListScreen = () => {
     }
 
     try {
-      const res = await fetch(`http://192.168.11.121:4242/list/${id}`,{
-        method : 'GET',
-        headers : {
-          "Content-Type" : "application/json",
-          "Authorization" : `Bearer ${token}`
+      const res = await fetch(`${ServeurPoint}/list/${id}`, {
+        method: 'GET',
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         }
       });
       if (!res.ok) throw new Error(`No data received, Status: ${res.status}`);
@@ -50,12 +51,13 @@ const ListScreen = () => {
       method: "GET",
       headers: {
         accept: "application/json",
-        Authorization:   "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1ZDJhZTBiNzE4MDQ3Yzc3MWYxMmQyNmFhOTA0ZDNjMCIsIm5iZiI6MTczODYxMTIxOS4zNjYwMDAyLCJzdWIiOiI2N2ExMWExM2VkODI5ZWJjNTZlMmI0NGYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.3K88CPu4X0HUOYc3J5Ns4GfL5dijSKMsDcT9Hr0ayvA",
+        Authorization: `Bearer ${tmdb_Token}`,
       },
     };
 
     try {
       const response = await fetch(url, options);
+
       if (!response.ok) throw new Error("Échec du chargement des films.");
 
       const data = await response.json();
@@ -72,14 +74,16 @@ const ListScreen = () => {
       method: "GET",
       headers: {
         accept: "application/json",
-        Authorization: "Bearer TON_TOKEN_TMDB",
+        Authorization: `Bearer ${tmdb_Token}`,
       },
     };
 
     try {
       const response = await fetch(url, options);
+      console.log("response data films ", response.ok)
       if (!response.ok) throw new Error("Échec du chargement des films.");
       const data = await response.json();
+
       setComing(data.results);
     } catch (err) {
       setError(err.message);
